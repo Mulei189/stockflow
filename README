@@ -1,0 +1,28 @@
+# StockFlow
+
+Inventory & Sales Analytics System.
+
+## Tech Stack
+
+### Backend
+- Node.js
+- Express
+- PostgreSQL
+- JWT
+- Zod
+
+### Frontend
+- React
+- TanStack Query
+- React Hook Form
+- Recharts
+
+## Features
+
+- Authentication
+- Product Management
+- Supplier Management
+- Purchase Tracking
+- Sales Tracking
+- Inventory Analytics
+- Dashboard Reporting
