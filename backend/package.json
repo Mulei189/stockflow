@@ -4,7 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit pull",
+    "db:reset": "drizzle-kit reset",
+    "db:migrate": "drizzle-kit migrate",
+    "db:rollback": "drizzle-kit rollback",
+    "db:status": "drizzle-kit status",
+    "db:studio": "drizzle-kit studio"
   },
   "keywords": [],
   "author": "",
