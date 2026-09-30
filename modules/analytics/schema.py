@@ -81,3 +81,10 @@ class PurchaseAnalyticsResponse(BaseModel):
     average_purchase_value: Decimal
 
     suppliers: list[SupplierAnalyticsItemResponse]
+
+class DashboardResponse(BaseModel):
+    overview: AnalyticsOverviewResponse
+    sales: SalesAnalyticsResponse
+    products: ProductAnalyticsResponse
+    customers: CustomerAnalyticsResponse
+    purchases: PurchaseAnalyticsResponse

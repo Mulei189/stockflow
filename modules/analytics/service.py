@@ -352,3 +352,12 @@ def get_purchase_analytics(db: Session):
         "average_purchase_value": average_purchase_value,
         "suppliers": supplier_analytics,
     }
+
+def get_dashboard_analytics(db: Session):
+    return {
+        "overview": get_analytics_overview(db),
+        "sales": get_sales_analytics(db),
+        "products": get_product_analytics(db),
+        "customers": get_customer_analytics(db),
+        "purchases": get_purchase_analytics(db),
+    }

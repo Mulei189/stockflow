@@ -8,6 +8,7 @@ from modules.analytics.schema import (
     ProductAnalyticsResponse,
     CustomerAnalyticsResponse,
     PurchaseAnalyticsResponse,
+    DashboardResponse,
 )
 from modules.analytics.service import (
     get_analytics_overview,
@@ -15,6 +16,7 @@ from modules.analytics.service import (
     get_product_analytics,
     get_customer_analytics,
     get_purchase_analytics,
+    get_dashboard_analytics,
 )
 
 router = APIRouter(
@@ -45,3 +47,7 @@ def get_customer_analytics_data(db: Session = Depends(get_db)):
 @router.get("/purchases", response_model=PurchaseAnalyticsResponse)
 def get_purchase_analytics_data(db: Session = Depends(get_db)):
     return get_purchase_analytics(db)
+
+@router.get("/dashboard", response_model=DashboardResponse)
+def get_dashboard_analytics_data(db: Session = Depends(get_db)):
+    return get_dashboard_analytics(db)
