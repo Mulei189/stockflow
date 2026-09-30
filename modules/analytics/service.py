@@ -169,28 +169,34 @@ def get_product_analytics(db: Session):
         .all()
     )
 
+    product_sales = (
+        db.query(
+            SaleItem.product_id,
+            func.coalesce(
+                func.sum(SaleItem.quantity),
+                0
+            ).label("units_sold"),
+            func.coalesce(
+                func.sum(SaleItem.subtotal),
+                0
+            ).label("revenue"),
+        )
+        .group_by(SaleItem.product_id)
+        .all()
+    )
+
+    sales_lookup = {
+        row.product_id: row
+        for row in product_sales
+    }
+
     product_analytics = []
 
     for product in products:
-        units_sold = (
-            db.query(
-                func.coalesce(func.sum(SaleItem.quantity), 0)
-            )
-            .filter(SaleItem.product_id == product.id)
-            .scalar()
-            or 0
-        )
+        sales = sales_lookup.get(product.id)
 
-        revenue = (
-            db.query(
-                func.coalesce(func.sum(SaleItem.subtotal), 0)
-            )
-            .filter(SaleItem.product_id == product.id)
-            .scalar()
-            or 0
-        )
-
-        current_stock_value = product.quantity * product.price
+        units_sold = sales.units_sold if sales else 0
+        revenue = sales.revenue if sales else 0
 
         product_analytics.append(
             {
@@ -200,7 +206,9 @@ def get_product_analytics(db: Session):
                 "units_sold": units_sold,
                 "revenue": revenue,
                 "current_stock": product.quantity,
-                "current_stock_value": current_stock_value,
+                "current_stock_value": (
+                    product.quantity * product.price
+                ),
             }
         )
 
@@ -216,33 +224,53 @@ def get_customer_analytics(db: Session):
         .all()
     )
 
+    customer_sales = (
+        db.query(
+            Sale.customer_id,
+            func.count(Sale.id).label("transaction_count"),
+            func.coalesce(
+                func.sum(SaleItem.quantity),
+                0
+            ).label("units_purchased"),
+            func.coalesce(
+                func.sum(Sale.total_amount),
+                0
+            ).label("total_spent"),
+        )
+        .join(
+            SaleItem,
+            Sale.id == SaleItem.sale_id
+        )
+        .group_by(Sale.customer_id)
+        .all()
+    )
+
+    customer_lookup = {
+        row.customer_id: row
+        for row in customer_sales
+    }
+
     customer_analytics = []
 
     for customer in customers:
+        sales = customer_lookup.get(customer.id)
+
         transaction_count = (
-            db.query(func.count(Sale.id))
-            .filter(Sale.customer_id == customer.id)
-            .scalar()
-            or 0
+            sales.transaction_count
+            if sales
+            else 0
         )
 
         units_purchased = (
-            db.query(
-                func.coalesce(func.sum(SaleItem.quantity), 0)
-            )
-            .join(Sale, Sale.id == SaleItem.sale_id)
-            .filter(Sale.customer_id == customer.id)
-            .scalar()
-            or 0
+            sales.units_purchased
+            if sales
+            else 0
         )
 
         total_spent = (
-            db.query(
-                func.coalesce(func.sum(Sale.total_amount), 0)
-            )
-            .filter(Sale.customer_id == customer.id)
-            .scalar()
-            or 0
+            sales.total_spent
+            if sales
+            else 0
         )
 
         average_transaction_value = (
@@ -258,7 +286,9 @@ def get_customer_analytics(db: Session):
                 "transaction_count": transaction_count,
                 "units_purchased": units_purchased,
                 "total_spent": total_spent,
-                "average_transaction_value": average_transaction_value,
+                "average_transaction_value": (
+                    average_transaction_value
+                ),
             }
         )
 

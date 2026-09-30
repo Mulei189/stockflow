@@ -68,35 +68,40 @@ def create_purchase(payload: PurchaseCreate, db: Session):
         status="received"
     )
 
-    db.add(purchase)
-    db.flush()
+    try:
+        db.add(purchase)
+        db.flush()
 
-    # 4. Add items and update stock
-    for purchase_item, product in purchase_items:
+        # 4. Add items and update stock
+        for purchase_item, product in purchase_items:
 
-        purchase_item.purchase_id = purchase.id
+            purchase_item.purchase_id = purchase.id
 
-        db.add(purchase_item)
+            db.add(purchase_item)
 
-        product.quantity += purchase_item.quantity
+            product.quantity += purchase_item.quantity
 
-        create_stock_movement(
-            db=db,
-            product_id=product.id,
-            movement_type="IN",
-            quantity=purchase_item.quantity,
-            reference_type="PURCHASE",
-            reference_id=purchase.id,
-            notes=f"Stock received from purchase #{purchase.id}"
-        )
+            create_stock_movement(
+                db=db,
+                product_id=product.id,
+                movement_type="IN",
+                quantity=purchase_item.quantity,
+                reference_type="PURCHASE",
+                reference_id=purchase.id,
+                notes=f"Stock received from purchase #{purchase.id}"
+            )
 
-    # 5. Commit everything together
-    db.commit()
+        # 5. Commit everything together
+        db.commit()
 
-    # 6. Refresh purchase
-    db.refresh(purchase)
+        # 6. Refresh purchase
+        db.refresh(purchase)
 
-    return purchase
+        return purchase
+
+    except Exception:
+        db.rollback()
+        raise
 
 def get_purchases(db: Session):
     return db.query(Purchase).order_by(Purchase.id.desc()).all()

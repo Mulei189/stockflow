@@ -77,34 +77,39 @@ def create_sale(payload: SaleCreate, db: Session):
         items=[item[0] for item in sale_items]
     )
     
-    db.add(sale)
-    db.flush()  # Flush to get sale.id for stock movements
-    
-    # 6. Create sale items and update stock
-    for sale_item, product in sale_items:
-        sale_item.sale_id = sale.id
+    try:
+        db.add(sale)
+        db.flush()  # Flush to get sale.id for stock movements
         
-        db.add(sale_item)
+        # 6. Create sale items and update stock
+        for sale_item, product in sale_items:
+            sale_item.sale_id = sale.id
+            
+            db.add(sale_item)
+            
+            # Deduct stock
+            product.quantity -= sale_item.quantity
+            
+            # 7. Create STOCK OUT movement
+            create_stock_movement(
+                db=db,
+                product_id=product.id,
+                movement_type="OUT",
+                quantity=sale_item.quantity,
+                reference_type="SALE",
+                reference_id=sale.id,
+                notes=f"Stock sold through sale #{sale.id}"
+            )
         
-        # Deduct stock
-        product.quantity -= sale_item.quantity
+        # 8. Commit transaction
+        db.commit()
+        db.refresh(sale)
         
-        # 7. Create STOCK OUT movement
-        create_stock_movement(
-            db=db,
-            product_id=product.id,
-            movement_type="OUT",
-            quantity=sale_item.quantity,
-            reference_type="SALE",
-            reference_id=sale.id,
-            notes=f"Stock sold through sale #{sale.id}"
-        )
-    
-    # 8. Commit transaction
-    db.commit()
-    db.refresh(sale)
-    
-    return sale
+        return sale
+
+    except Exception:
+        db.rollback()
+        raise
 
 def get_sales(db: Session):
     return (

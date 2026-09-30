@@ -12,12 +12,17 @@ from modules.stock_movements.router import (
 from modules.sales.router import router as sales_router
 from modules.inventory.router import router as inventory_router
 from modules.analytics.router import router as analytics_router
-
+from core.exceptions import global_exception_handler
 
 app = FastAPI(
     title="StockFlow API",
     description="API for inventory and sales management",
     version="1.0.0"
+)
+
+# Add the global exception handler
+app.add_exception_handler(
+    Exception, global_exception_handler
 )
 
 # Create database tables
